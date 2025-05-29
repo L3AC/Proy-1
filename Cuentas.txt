@@ -1,0 +1,3 @@
+12345678|Juan Perez|1500.50
+87654321|Maria Lopez|3250.75
+99887766|Carlos Garcia|500.00
