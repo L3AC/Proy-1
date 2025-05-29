@@ -1,3 +1,3 @@
-12345678|Juan Perez|1500.50
-87654321|Maria Lopez|3250.75
-99887766|Carlos Garcia|500.00
+12345678|Juan Perez|1412.50|password123
+87654321|Maria Lopez|3250.75|tracon321
+99887766|Carlos Garcia|500.00|contra123
