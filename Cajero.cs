@@ -16,77 +16,80 @@ class Program
     static void Main(string[] args)
     {
         CuentaBancaria[] cuentas = CargarDatos();
-        
+        int indiceCuenta;
+        CuentaBancaria cuentaActual;
+
         Console.WriteLine("BIENVENIDO AL CAJERO AUTOMÁTICO");
-        Console.Write("Ingrese su número de cuenta: ");
-        string numeroCuenta = Console.ReadLine();
-
-        int indiceCuenta = Array.FindIndex(cuentas, c => c.numeroCuenta == numeroCuenta);
-        
-        if (indiceCuenta == -1)
+        while (true)
         {
-            Console.WriteLine("¡Cuenta no encontrada!");
-            return;
-        }
+            Console.Write("Ingrese su número de cuenta: ");
+            string numeroCuenta = Console.ReadLine();
+            indiceCuenta = Array.FindIndex(cuentas, c => c.numeroCuenta == numeroCuenta);
 
-        CuentaBancaria cuentaActual = cuentas[indiceCuenta];
+            if (indiceCuenta != -1)
+            {
+                cuentaActual = cuentas[indiceCuenta];
+                break;
+            }
+            else
+            {
+                Console.Clear();
+                Console.WriteLine("¡Cuenta no encontrada! Por favor, intente de nuevo.");
+            }
+        }
         bool salir = false;
 
         do
         {
+            Console.Clear();
             string opcion = MostrarMenu();
-            
+
             switch (opcion)
             {
                 case "1":
+                    Console.Clear();
                     ConsultarSaldo(cuentaActual);
                     break;
-                    
+
                 case "2":
+                    Console.Clear();
                     decimal montoDeposito = LeerMonto();
-                    if (ValidarMonto(montoDeposito))
+                    DepositarDinero(ref cuentaActual, montoDeposito);
+                    cuentas[indiceCuenta] = cuentaActual;
+                    GuardarDatos(cuentas);
+                    break;
+
+                case "3":
+                    Console.Clear();
+                    decimal montoRetiro = LeerMonto();
+                    if (SaldoSuficiente(cuentaActual, montoRetiro))
                     {
-                        DepositarDinero(ref cuentaActual, montoDeposito);
+                        RetirarDinero(ref cuentaActual, montoRetiro);
                         cuentas[indiceCuenta] = cuentaActual;
                         GuardarDatos(cuentas);
                     }
                     else
                     {
-                        Console.WriteLine("Monto inválido! Debe ser mayor a cero.");
+                        Console.WriteLine("Saldo insuficiente!");
                     }
                     break;
-                    
-                case "3":
-                    decimal montoRetiro = LeerMonto();
-                    if (ValidarMonto(montoRetiro))
-                    {
-                        if (SaldoSuficiente(cuentaActual, montoRetiro))
-                        {
-                            RetirarDinero(ref cuentaActual, montoRetiro);
-                            cuentas[indiceCuenta] = cuentaActual;
-                            GuardarDatos(cuentas);
-                        }
-                        else
-                        {
-                            Console.WriteLine("Saldo insuficiente!");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Monto inválido! Debe ser mayor a cero.");
-                    }
-                    break;
-                    
+
                 case "4":
+                    Console.Clear();
                     salir = true;
                     Console.WriteLine("Saliendo del sistema...");
                     break;
-                    
+
                 default:
                     Console.WriteLine("Opción no válida!");
                     break;
             }
-            
+            if (!salir)
+            {
+                Console.WriteLine("\nPresione Enter para volver al menú...");
+                Console.ReadLine();
+            }
+
         } while (!salir);
     }
 
@@ -107,7 +110,7 @@ class Program
 
         string[] lineas = File.ReadAllLines(ARCHIVO_CUENTAS);
         CuentaBancaria[] cuentas = new CuentaBancaria[lineas.Length];
-        
+
         for (int i = 0; i < lineas.Length; i++)
         {
             string[] datos = lineas[i].Split('|');
@@ -115,19 +118,19 @@ class Program
             cuentas[i].nombreTitular = datos[1];
             cuentas[i].saldo = decimal.Parse(datos[2]);
         }
-        
+
         return cuentas;
     }
 
     static void GuardarDatos(CuentaBancaria[] cuentas)
     {
         string[] lineas = new string[cuentas.Length];
-        
+
         for (int i = 0; i < cuentas.Length; i++)
         {
             lineas[i] = $"{cuentas[i].numeroCuenta}|{cuentas[i].nombreTitular}|{cuentas[i].saldo}";
         }
-        
+
         File.WriteAllLines(ARCHIVO_CUENTAS, lineas);
     }
 
@@ -135,21 +138,25 @@ class Program
     {
         Console.WriteLine($"\nTitular: {cuenta.nombreTitular}");
         Console.WriteLine($"Número de cuenta: {cuenta.numeroCuenta}");
-        Console.WriteLine($"Saldo actual: {cuenta.saldo:C}");
+        Console.WriteLine($"Saldo actual: {cuenta.saldo:C}"); 
     }
 
     static decimal LeerMonto()
     {
-        Console.Write("\nIngrese el monto: ");
         decimal monto;
-        decimal.TryParse(Console.ReadLine(), out monto);
+        do
+        {
+            Console.Write("\nIngrese el monto: ");
+            if (!decimal.TryParse(Console.ReadLine(), out monto) || monto <= 0)
+            {
+                Console.WriteLine("Error: Debe ingresar un monto numérico y positivo.");
+                monto = 0; 
+            }
+        } while (monto <= 0);
+
         return monto;
     }
 
-    static bool ValidarMonto(decimal monto)
-    {
-        return monto > 0;
-    }
 
     static bool SaldoSuficiente(CuentaBancaria cuenta, decimal monto)
     {
